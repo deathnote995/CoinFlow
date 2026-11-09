@@ -4,21 +4,38 @@ import { fileURLToPath } from "url";
 
 const __filename=fileURLToPath(import.meta.url)
 const __dirname=path.dirname(__filename)
+const onlyDebug=format(log=>{
+    return log.level==='debug'?log:false
+})
+const onlyError=format(log=>{
+    return log.level==='error'?log:false
+})
+const infoAndAbove=format(log=>{
+    // return log.level==='info'||'warn'||'error'?log:false
+    return ['info','debug','error'].includes(log.level)?log:false
+})
 
 const logger=createLogger({
-    level:'info',
+    level:'debug', //sets log level to lowest   
     format:format.combine(
-        format.timestamp({format:'YYYY-MM-DD HH-mm-ss'}),
+        format.timestamp({format:'YYYY-MM-DD HH:mm:ss'}),
         format.errors({stack:true}),
         format.json()
     ),
     transports:[
         new transports.File({
-            filename:path.join(__dirname,'../../logs/info.log')
+            filename:path.join(__dirname,'../../logs/info.log'),
+            format:format.combine(infoAndAbove(),format.json())
         }),
         new transports.File({
             filename:path.join(__dirname,'../../logs/error.log'),
-            level:'error'
+            // level:'error',
+            format:format.combine(onlyError(),format.json())
+        }),
+        new transports.File({
+            filename:path.join(__dirname,'../../logs/debug.log'),
+            // level:'debug',
+            format:format.combine(onlyDebug(),format.json())
         })
     ],
 })
