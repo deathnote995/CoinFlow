@@ -7,7 +7,7 @@ const transactionSchema=new mongoose.Schema({
         ref:'User'
     },
     walletId:{
-        type:String,
+        type:mongoose.Schema.Types.ObjectId,
         required:true,
         ref:'Wallet'
     },

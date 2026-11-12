@@ -5,6 +5,7 @@ import logger from '../utils/logger.js'
 
 
 export const createTransaction=async(req,res)=>{
+    // console.log('Hit this createTrans route',req.body)
     try {
         const {userId,walletId,type,description,amount,category,date}=req.body
 
@@ -34,12 +35,12 @@ export const createTransaction=async(req,res)=>{
         const user=await User.findById(userId)
         let alertTriggered=false
 
-        if(user&&curBalance<user.balanceAlertThreshold){
+        if(user&&wallet.curBalance<user.balanceAlertThreshold){
             alertTriggered=true
             logger.warn(`LOW BALANCE ALERT: Wallet ${wallet.accName} ${wallet._id} balance dropped to ₹${wallet.curBalance} (Threshold is ₹${user.balanceAlertThreshold})`)
         }
 
-        logger.info(`Transaction recorded: ${type.toUpperCase()} ₹${amount} for waller ${wallet.accName}`)
+        logger.info(`Transaction recorded: ${type.toUpperCase()} ₹${amount} for wallet ${wallet.accName}`)
 
         return res.status(201).json({
             success:true,
@@ -60,13 +61,16 @@ export const createTransaction=async(req,res)=>{
     }
 }
 
-export const getTransactions=async(req,res)=>{
+export const getWalletTransactions=async(req,res)=>{
+    // console.log('Hit wallet trans api',req.body)
     try {
         const {walletId}=req.params
         if(!walletId)
-            res.status(404).json({success:false,message:'No wallet found'})
+            return res.status(404).json({success:false,message:'Please send the walletId'})
 
         const transactions=await Transaction.find({walletId}).sort({date:-1})
+        if(!transactions)
+            return res.status(404).json({success:false,message:'No matching record of the wallet found'})
 
         return res.status(201).json({
             success:true,
