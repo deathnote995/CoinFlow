@@ -25,32 +25,42 @@ export const createTransaction=async(req,res)=>{
             date:date||Date.now()
         })
 
-        const balanceChange = type==='income' ? Number(amount) : -Number(amount)
+        if(amount<=wallet.curBalance&&amount>0){
 
-        wallet.curBalance+=balanceChange
-        await wallet.save()
-
-        await transaction.save()
-
-        const user=await User.findById(userId)
-        let alertTriggered=false
-
-        if(user&&wallet.curBalance<user.balanceAlertThreshold){
-            alertTriggered=true
-            logger.warn(`LOW BALANCE ALERT: Wallet ${wallet.accName} ${wallet._id} balance dropped to ₹${wallet.curBalance} (Threshold is ₹${user.balanceAlertThreshold})`)
-        }
-
-        logger.info(`Transaction recorded: ${type.toUpperCase()} ₹${amount} for wallet ${wallet.accName}`)
-
-        return res.status(201).json({
-            success:true,
-            message:'Transaction Successfull',
-            date:{
-                transaction,
-                updatedWalletBalance:wallet.curBalance,
-                alertTriggered
+            const balanceChange = type==='income' ? Number(amount) : -Number(amount)
+            
+            wallet.curBalance+=balanceChange
+            await wallet.save()
+            
+            await transaction.save()
+            
+            const user=await User.findById(userId)
+            let alertTriggered=false
+            
+            if(user&&wallet.curBalance<user.balanceAlertThreshold){
+                alertTriggered=true
+                logger.warn(`LOW BALANCE ALERT: Wallet ${wallet.accName} ${wallet._id} balance dropped to ₹${wallet.curBalance} (Threshold is ₹${user.balanceAlertThreshold})`)
             }
-        })
+            
+            logger.info(`Transaction recorded: ${type.toUpperCase()} ₹${amount} for wallet ${wallet.accName}`)
+            
+            return res.status(201).json({
+                success:true,
+                message:'Transaction Successfull',
+                date:{
+                    transaction,
+                    updatedWalletBalance:wallet.curBalance,
+                    alertTriggered
+                }
+            })
+        }
+        if(amount<=0){
+            logger.warn(`Entered amount should be greater than 0`)
+            return res.status(400).json({success:false,message:`Entered amount should be greater than 0`})
+        }
+        logger.warn(`Available balance is less than amount, Current Balance: ${wallet.curBalance}`)
+        return res.status(400).json({success:false,message:'Not enough balance'})
+
     } catch (error) {
         logger.error(`Error creating transaction: ${error.message}`)
         return res.status(500).json({
@@ -60,6 +70,8 @@ export const createTransaction=async(req,res)=>{
         })
     }
 }
+
+
 
 export const getWalletTransactions=async(req,res)=>{
     // console.log('Hit wallet trans api',req.body)
