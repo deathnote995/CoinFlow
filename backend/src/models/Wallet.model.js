@@ -23,8 +23,19 @@ const walletSchema=new mongoose.Schema({
     },
     accType:{
         type:String,
-        enum:['savings','wallet','credit','current','salary'],
-        default:'savings'
+        enum:['Savings','Wallet','CreditCard','Current','Salary','Cash','MutualFund_SIP'],
+        default:'savings',
+        required:[true,'Please specify the account type']
+    },
+    isActive:{
+        type:Boolean,
+        default:true
+    },
+    metadata:{
+        interestRate:{type:Number},
+        maturityDate:{type:Date},
+        sipAmount:{type:Number},
+        sipFrequency:{type:String,enum:['Monthly','Weekly','Daily']}
     }
 },{timestamps:true})
 

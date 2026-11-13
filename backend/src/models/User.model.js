@@ -23,6 +23,11 @@ const userSchema=new mongoose.Schema({
     balanceAlertThreshold:{
         type:Number,
         default:500
+    },
+    themePreference:{
+        type:String,
+        enum:['light','dark'],
+        default:'light'
     }
 },{timestamps:true})
 
