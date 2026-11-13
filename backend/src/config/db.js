@@ -1,7 +1,10 @@
 import mongoose from 'mongoose'
 import logger from '../utils/logger.js'
-
+// import dotenv from 'dotenv'
+// dotenv.config()
 mongoose.set('strictQuery',false)
+
+// console.log(process.env.MONGO_URI)
 
 const connectDB=async()=>{
     try {

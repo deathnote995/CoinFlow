@@ -1,12 +1,15 @@
+import './config/env.js'
+// import dotenv from 'dotenv'
+// dotenv.config()
+
 import express, { json } from 'express'
 import logger from './utils/logger.js'
-import dotenv from 'dotenv'
 import connectDB from './config/db.js'
 import transactionRoutes from './routes/transaction.route.js'
-import userCreationRoute from './routes/user.route.js'
-import walletRoute from './routes/wallet.route.js'
+import userRoutes from './routes/user.route.js'
+import walletRoutes from './routes/wallet.route.js'
+import authRoutes from './routes/auth.route.js'
 
-dotenv.config()
 
 const app=express()
 const PORT=process.env.PORT||3000
@@ -14,8 +17,9 @@ app.use(express.json())
 connectDB()
 
 app.use('/api/transactions',transactionRoutes)
-app.use('/api/users',userCreationRoute)
-app.use('/api/wallets',walletRoute)
+app.use('/api/users',userRoutes)
+app.use('/api/wallets',walletRoutes)
+app.use('/api/auth',authRoutes)
 
 app.get('/api/health',(req,res)=>{
     logger.info("Health check api responded succesfully")

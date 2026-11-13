@@ -1,7 +1,8 @@
 import User from "../models/User.model.js"
 import logger from "../utils/logger.js"
 
-//Create User
+//Create User logic moved to auth.controler.js
+/* 
 export const createUser=async(req,res)=>{
     try {
         
@@ -23,6 +24,7 @@ export const createUser=async(req,res)=>{
         return res.status(500).json({success:false,message:'Some server error occured while creating user'})
     }
 }
+*/
 
 // Get user profile details
 export const getUserProfile = async (req, res) => {

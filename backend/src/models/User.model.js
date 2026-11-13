@@ -20,6 +20,21 @@ const userSchema=new mongoose.Schema({
         minlength:[8,'Password must be atleast 8 characters long'],
         unique:true,
     },
+    phone:{ //Optional
+        type:String,
+        trim:true
+    },
+
+    //2FA and Verification status
+    isEmailVerified:{
+        type:Boolean,
+        default:false
+    },
+
+    //Temporay otp storage for 2FA and pass resets
+    otpCode:{type:String},
+    otpExpire:{type:Date},
+
     balanceAlertThreshold:{
         type:Number,
         default:500
