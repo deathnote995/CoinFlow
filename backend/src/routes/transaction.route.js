@@ -1,7 +1,10 @@
 import express from 'express'
 import { createTransaction, getWalletTransactions } from '../controllers/transaction.controller.js'
+import { protect } from '../middlewares/auth.middleware.js'
 
 const router=express.Router()
+
+router.use(protect)
 
 // POST /api/transactions - Record a new income/expense & update wallet balance
 router.post('/',createTransaction)

@@ -7,7 +7,9 @@ import logger from '../utils/logger.js'
 export const createTransaction=async(req,res)=>{
     // console.log('Hit this createTrans route',req.body)
     try {
-        const {userId,walletId,type,description,amount,category,date}=req.body
+        // const {userId,walletId,type,description,amount,category,date}=req.body
+        const {walletId,type,description,amount,category,date}=req.body
+        const userId=req.user._id
 
         if(!userId||!walletId||!amount||!type||!description)
             return res.status(400).json({success:false,message:'Please provide all required transaction feilds (userId, walletId, type, description, amount)'})

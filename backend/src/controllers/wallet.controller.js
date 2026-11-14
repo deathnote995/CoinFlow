@@ -6,7 +6,9 @@ import logger from "../utils/logger.js";
 export const createWallet=async(req,res)=>{
     try{
 
-        const {userId,accName,accNumber,currentBalance,accType,metadata}=req.body
+        // const {userId,accName,accNumber,currentBalance,accType,metadata}=req.body
+        const {accName,accNumber,currentBalance,accType,metadata}=req.body
+        const userId=req.user._id
         
         if(!userId||!accName||!accNumber||!accType)
             return res.status(400).json({success:false,message:'userId, AccountName,Number,Type are necessay feilds'}) 
@@ -28,7 +30,8 @@ export const createWallet=async(req,res)=>{
 // Fetch all wallets and assets belonging to a specific user
 export const getUserWallets = async (req, res) => {
     try {
-        const { userId } = req.params;
+        // const { userId } = req.params;
+        const userId=req.user._id
 
         const wallets = await Wallet.find({ userId, isActive: true });
         return res.status(200).json({
@@ -45,7 +48,8 @@ export const getUserWallets = async (req, res) => {
 // Aggregated summary for the dashboard KPI ribbon (Net Worth, FD counts, SIP counts)
 export const getDashboardSummary = async (req, res) => {
     try {
-        const { userId } = req.params;
+        // const { userId } = req.params;
+        const userId=req.user._id
 
         const wallets = await Wallet.find({ userId, isActive: true });
 

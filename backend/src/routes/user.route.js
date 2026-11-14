@@ -1,11 +1,14 @@
 import {  userThemeUpdate, getUserProfile, updateUserProfile } from "../controllers/user.controller.js";
 import express from 'express'
+import { protect } from "../middlewares/auth.middleware.js";
 
 const router=express.Router()
 
+router.use(protect)
+
 // router.post('/',createUser) --> moved to auth.route.js
-router.put('/:userId/theme',userThemeUpdate)
-router.get('/:userId',getUserProfile)
-router.put('/:userId',updateUserProfile)
+router.patch('/theme',userThemeUpdate)
+router.get('/profile',getUserProfile)
+router.put('/profile',updateUserProfile)
 
 export default router

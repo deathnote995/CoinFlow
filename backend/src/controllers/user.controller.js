@@ -29,7 +29,8 @@ export const createUser=async(req,res)=>{
 // Get user profile details
 export const getUserProfile = async (req, res) => {
     try {
-        const { userId } = req.params;
+        // const { userId } = req.params;
+        const userId=req.user._id
         const user = await User.findById(userId).select('-password');
         
         if (!user) {
@@ -46,7 +47,8 @@ export const getUserProfile = async (req, res) => {
 // Update user settings (name, phone, balanceAlertThreshold, themePreference)
 export const updateUserProfile = async (req, res) => {
     try {
-        const { userId } = req.params;
+        // const { userId } = req.params;
+        const userId=req.user._id
         const { name, phone, balanceAlertThreshold, themePreference } = req.body;
 
         const updateData = {};
@@ -78,7 +80,8 @@ export const updateUserProfile = async (req, res) => {
 // Standalone theme update controller
 export const userThemeUpdate=async(req,res)=>{
     try{
-        const {userId}=req.params
+        // const {userId}=req.params
+        const userId=req.user._id
         const {themePreference}=req.body
 
         if(!['light','dark'].includes(themePreference))

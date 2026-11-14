@@ -1,6 +1,8 @@
+import bcrypt from 'bcryptjs';
 import User from '../models/User.model.js';
 import { sendEmailAlert } from '../utils/email.service.js';
 import logger from '../utils/logger.js';
+import generateToken from '../utils/generateToken.js';
 
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -139,3 +141,41 @@ export const resetPassword = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Server error resetting password' });
     }
 };
+
+//User login controller
+export const userLogin=async(req,res)=>{
+    try{
+        const {email,password}=req.body
+
+        if(!email||!password)
+            return res.status(404).json({success:false,message:'Both feilds are required'})
+        
+        const user=await User.findOne({email:email.toLowerCase()}).select('+password')
+        if(!user)
+            return res.status(401).json({success:false,message:'Invalid email or password'})
+        
+        const isMatch=await bcrypt.compare(password,user.password)
+        if(!isMatch)
+            return res.status(401).json({success:false,message:'Invalid email or password'})
+        
+        if(!user.isEmailVerified)
+            return res.status(403).json({message:'Email not verified,please verify your email using the OTP sent to your mail',userId:user._id})
+        
+        const token=generateToken(user._id)
+        
+        logger.info(`User logged in: ${user.email}`)
+        
+        res.status(200).json({
+            status:'SUCCESS',
+            token,
+            user:{
+                id:user._id,
+                name:user.name,
+                email:user.email
+            }})
+            
+        } catch(error){            
+            logger.error(`Error while logging in: ${error.message}`)
+            return res.status(500).json({success:false,message:'Some server error during login',error:error.message})
+    }
+}
