@@ -38,8 +38,18 @@ const transactionSchema=new mongoose.Schema({
     isAutoFetched:{
         type:Boolean,
         default:false
+    },
+    isAutomated:{
+        type:Boolean,
+        default:false
+    },
+    referenceId:{
+        type:String,
+        trim:true
     }
 },{timeseries:true})
+
+transactionSchema.index({userId:1, referenceId:1},{unique:true,sparse:true})
 
 const Transaction=mongoose.model('Transaction',transactionSchema)
 

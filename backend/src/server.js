@@ -9,6 +9,7 @@ import transactionRoutes from './routes/transaction.route.js'
 import userRoutes from './routes/user.route.js'
 import walletRoutes from './routes/wallet.route.js'
 import authRoutes from './routes/auth.route.js'
+import analyticRoute from './routes/analytics.route.js'
 
 
 const app=express()
@@ -20,6 +21,7 @@ app.use('/api/transactions',transactionRoutes)
 app.use('/api/users',userRoutes)
 app.use('/api/wallets',walletRoutes)
 app.use('/api/auth',authRoutes)
+app.use('/api/analytics',analyticRoute)
 
 app.get('/api/health',(req,res)=>{
     logger.info("Health check api responded succesfully")

@@ -210,12 +210,14 @@ import Transaction from '../models/Transaction.model.js';
 import logger from '../utils/logger.js';
 import { sendEmailAlert } from '../utils/email.service.js';
 import { autoCategorizeTransaction } from '../services/categorisation.service.js';
+import { generateTransactionHash } from '../utils/hash.util.js';
 
 // 1. Create a Single Transaction (Manual or Webhook)
 export const createTransaction = async (req, res) => {
     try {
         const { walletId, type, description, amount, category, date } = req.body;
         const userId = req.user._id;
+        let alertTriggered = false;
 
         if (!walletId || !amount || !type || !description) {
             return res.status(400).json({ 
@@ -235,6 +237,34 @@ export const createTransaction = async (req, res) => {
         if (!wallet) {
             return res.status(404).json({ success: false, message: 'Wallet not found or unauthorized' });
         }
+
+
+        //Additional code to prevent duplicacy of transactions
+        // 1. Generate or use the provided referenceId/fingerprint
+        const txDate = date ? new Date(date) : new Date();
+        const fingerprint = referenceId?.trim() || generateTransactionHash({
+            walletId,
+            date: txDate,
+            amount: numAmount,
+            type,
+            description
+        })
+
+        // 2. IDEMPOTENCY CHECK: See if this exact transaction already exists
+        const existingTransaction = await Transaction.findOne({ userId, referenceId: fingerprint });
+        if (existingTransaction) {
+            logger.info(`Duplicate single transaction ignored for user ${userId} (Hash: ${fingerprint})`);
+            return res.status(200).json({
+                success: true,
+                message: 'Transaction already recorded (Idempotent duplicate skipped)',
+                data: {
+                    transaction: existingTransaction,
+                    updatedWalletBalance: wallet.curBalance,
+                    alertTriggered: false
+                }
+            })
+        }
+
 
         // Only block if it's an EXPENSE exceeding the current balance
         if (type === 'expense' && numAmount > wallet.curBalance) {
@@ -263,7 +293,6 @@ export const createTransaction = async (req, res) => {
 
         // Check Low Balance Alert (only relevant when balance drops on an expense)
         const user = await User.findById(userId);
-        let alertTriggered = false;
 
         if (type === 'expense' && user && wallet.curBalance < user.balanceAlertThreshold) {
             alertTriggered = true;
@@ -299,7 +328,7 @@ export const createTransaction = async (req, res) => {
 };
 
 // 2. Fetch Transactions for a Specific Wallet (User-Isolated)
-export const getWalletTransactions = async (req, res) => {
+/*export const getWalletTransactions = async (req, res) => {
     try {
         const { walletId } = req.params;
         const userId = req.user._id;
@@ -324,9 +353,144 @@ export const getWalletTransactions = async (req, res) => {
             error: error.message
         });
     }
-};
+}*/
+
+//New get wallet transaction controller
+export const getFilteredWalletTransactions = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { walletId, startDate, endDate, category, type, page = 1, limit = 20 } = req.query;
+
+        let query = { userId };
+
+        if (walletId) query.walletId = walletId;
+        if (category) query.category = category;
+        if (type) query.type = type;
+
+        // Date range filter
+        if (startDate || endDate) {
+            query.date = {};
+            if (startDate) query.date.$gte = new Date(startDate);
+            if (endDate) query.date.$lte = new Date(endDate);
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+
+        const transactions = await Transaction.find(query)
+            .sort({ date: -1 })
+            .skip(skip)
+            .limit(Number(limit));
+
+        const totalCount = await Transaction.countDocuments(query);
+
+        return res.status(200).json({
+            success: true,
+            currentPage: Number(page),
+            totalPages: Math.ceil(totalCount / Number(limit)),
+            count: transactions.length,
+            totalCount,
+            data: transactions
+        });
+
+    } catch (error) {
+        logger.error(`Error fetching filtered transactions: ${error.message}`);
+        return res.status(500).json({
+            success: false,
+            message: 'Server error while fetching transaction history',
+            error: error.message
+        });
+    }
+}
 
 // 3. Bulk Transaction Ingestion (CSV / Automated UPI Sync)
+// export const bulkCreateTransactions = async (req, res) => {
+//     try {
+//         const userId = req.user._id;
+//         const { walletId, transactions } = req.body;
+
+//         if (!walletId || !transactions || !Array.isArray(transactions) || transactions.length === 0) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Please provide a valid walletId and a non-empty transactions array.'
+//             });
+//         }
+
+//         const wallet = await Wallet.findOne({ _id: walletId, userId });
+//         if (!wallet) {
+//             return res.status(404).json({ success: false, message: 'Wallet not found or unauthorized.' });
+//         }
+
+//         const user = await User.findById(userId);
+//         let processedTransactions = [];
+//         let netBalanceChange = 0;
+
+//         for (const tx of transactions) {
+//             const { description, amount, type, date, merchant } = tx;
+//             if (!amount || !type || !description) continue;
+
+//             const assignedCategory = tx.category || autoCategorizeTransaction(description, merchant);
+//             const balanceDelta = type === 'income' ? Number(amount) : -Number(amount);
+//             netBalanceChange += balanceDelta;
+
+//             processedTransactions.push({
+//                 userId,
+//                 walletId,
+//                 amount: Number(amount),
+//                 type,
+//                 category: assignedCategory,
+//                 description,
+//                 date: date || Date.now(),
+//                 isAutomated: true
+//             });
+//         }
+
+//         if (wallet.curBalance + netBalanceChange < 0) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: `Bulk import failed: Resulting balance would drop below zero (Current Balance: ₹${wallet.curBalance}).`
+//             });
+//         }
+
+//         const insertedTransactions = await Transaction.insertMany(processedTransactions);
+
+//         wallet.curBalance += netBalanceChange;
+//         await wallet.save();
+
+//         let alertTriggered = false;
+//         if (user && wallet.curBalance < user.balanceAlertThreshold) {
+//             alertTriggered = true;
+//             logger.warn(`LOW BALANCE ALERT: Wallet ${wallet.accName} dropped to ₹${wallet.curBalance} after bulk sync.`);
+
+//             await sendEmailAlert(
+//                 user.email,
+//                 '⚠️ CoinFlow Low Balance Warning',
+//                 `<h3>Low Balance Alert</h3><p>Your wallet <b>${wallet.accName}</b> has dropped to <b>₹${wallet.curBalance}</b>, which is below your threshold of ₹${user.balanceAlertThreshold}.</p>`
+//             );
+//         }
+
+//         logger.info(`Successfully bulk-imported ${insertedTransactions.length} transactions for user ${userId}`);
+
+//         return res.status(201).json({
+//             success: true,
+//             message: `Successfully processed and categorized ${insertedTransactions.length} transactions.`,
+//             data: {
+//                 importedCount: insertedTransactions.length,
+//                 updatedWalletBalance: wallet.curBalance,
+//                 alertTriggered
+//             }
+//         });
+
+//     } catch (error) {
+//         logger.error(`Bulk ingestion error: ${error.message}`);
+//         return res.status(500).json({
+//             success: false,
+//             message: 'Server error during bulk transaction ingestion',
+//             error: error.message
+//         });
+//     }
+// }
+
+//new Bulk controller
 export const bulkCreateTransactions = async (req, res) => {
     try {
         const userId = req.user._id;
@@ -345,29 +509,91 @@ export const bulkCreateTransactions = async (req, res) => {
         }
 
         const user = await User.findById(userId);
-        let processedTransactions = [];
-        let netBalanceChange = 0;
+        const candidateMap = new Map();
+        let invalidCount = 0;
 
+        // 1. Normalize valid rows, validate amounts, and generate unique referenceIds/fingerprints
         for (const tx of transactions) {
-            const { description, amount, type, date, merchant } = tx;
-            if (!amount || !type || !description) continue;
+            const { description, amount, type, date, merchant, referenceId } = tx;
+            const numAmount = Number(amount);
+
+            if (!amount || !type || !description || numAmount <= 0) {
+                invalidCount++;
+                continue;
+            }
+
+            const txDate = date ? new Date(date) : new Date();
+            const fingerprint = referenceId?.trim() || generateTransactionHash({
+                walletId,
+                date: txDate,
+                amount: numAmount,
+                type,
+                description
+            });
+
+            // Skip duplicates within the same payload batch
+            if (candidateMap.has(fingerprint)) continue;
 
             const assignedCategory = tx.category || autoCategorizeTransaction(description, merchant);
-            const balanceDelta = type === 'income' ? Number(amount) : -Number(amount);
-            netBalanceChange += balanceDelta;
 
-            processedTransactions.push({
+            candidateMap.set(fingerprint, {
                 userId,
                 walletId,
-                amount: Number(amount),
+                amount: numAmount,
                 type,
                 category: assignedCategory,
-                description,
-                date: date || Date.now(),
-                isAutomated: true
+                description: description.trim(),
+                date: txDate,
+                isAutomated: true,
+                referenceId: fingerprint
             });
         }
 
+        if (candidateMap.size === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No valid transactions found in payload. Amounts must be greater than 0.'
+            });
+        }
+
+        // 2. Query MongoDB in one batch for already-imported referenceIds
+        const candidateRefs = Array.from(candidateMap.keys());
+        const existingDocs = await Transaction.find({
+            userId,
+            referenceId: { $in: candidateRefs }
+        }).select('referenceId');
+
+        const existingRefSet = new Set(existingDocs.map(doc => doc.referenceId));
+
+        // 3. Filter out existing database duplicates and compute precise net balance change
+        const newTransactions = [];
+        let netBalanceChange = 0;
+
+        for (const [ref, txDoc] of candidateMap.entries()) {
+            if (existingRefSet.has(ref)) continue;
+
+            newTransactions.push(txDoc);
+            netBalanceChange += txDoc.type === 'income' ? txDoc.amount : -txDoc.amount;
+        }
+
+        const duplicateCount = transactions.length - invalidCount - newTransactions.length;
+
+        // If every row was already imported, exit cleanly with 200 OK
+        if (newTransactions.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: 'All transactions were already synced. No duplicate entries added.',
+                data: {
+                    importedCount: 0,
+                    duplicateCount,
+                    invalidCount,
+                    updatedWalletBalance: wallet.curBalance,
+                    alertTriggered: false
+                }
+            });
+        }
+
+        // 4. Verify resulting balance won't drop below zero for bulk expenses
         if (wallet.curBalance + netBalanceChange < 0) {
             return res.status(400).json({
                 success: false,
@@ -375,11 +601,12 @@ export const bulkCreateTransactions = async (req, res) => {
             });
         }
 
-        const insertedTransactions = await Transaction.insertMany(processedTransactions);
-
+        // 5. Commit new records in bulk and update wallet balance
+        const insertedTransactions = await Transaction.insertMany(newTransactions);
         wallet.curBalance += netBalanceChange;
         await wallet.save();
 
+        // 6. Low-Balance Alert Check
         let alertTriggered = false;
         if (user && wallet.curBalance < user.balanceAlertThreshold) {
             alertTriggered = true;
@@ -388,17 +615,19 @@ export const bulkCreateTransactions = async (req, res) => {
             await sendEmailAlert(
                 user.email,
                 '⚠️ CoinFlow Low Balance Warning',
-                `<h3>Low Balance Alert</h3><p>Your wallet <b>${wallet.accName}</b> has dropped to <b>₹${wallet.curBalance}</b>, which is below your threshold of ₹${user.balanceAlertThreshold}.</p>`
+                `<h3>Low Balance Alert</h3><p>Your wallet <b>${wallet.accName}</b> has dropped to <b>₹${wallet.curBalance}</b>, which is below your threshold of ₹{user.balanceAlertThreshold}.</p>`
             );
         }
 
-        logger.info(`Successfully bulk-imported ${insertedTransactions.length} transactions for user ${userId}`);
+        logger.info(`Bulk sync complete: ${insertedTransactions.length} imported, ${duplicateCount} duplicates skipped.`);
 
         return res.status(201).json({
             success: true,
-            message: `Successfully processed and categorized ${insertedTransactions.length} transactions.`,
+            message: `Processed ${insertedTransactions.length} new transactions (${duplicateCount} duplicates skipped).`,
             data: {
                 importedCount: insertedTransactions.length,
+                duplicateCount,
+                invalidCount,
                 updatedWalletBalance: wallet.curBalance,
                 alertTriggered
             }
@@ -412,4 +641,4 @@ export const bulkCreateTransactions = async (req, res) => {
             error: error.message
         });
     }
-};
+}
