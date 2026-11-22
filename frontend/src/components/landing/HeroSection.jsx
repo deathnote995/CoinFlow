@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const FallbackQrSvg = () => (
   <svg
@@ -136,9 +137,9 @@ const HeroSection = () => {
         </p>
 
         <div className="mt-7 flex flex-wrap items-center gap-4">
-          <button type="button" className="cf-btn-primary">
+          <Link to="/register" type="button" className="cf-btn-primary">
             Get Started
-          </button>
+          </Link>
           <a
             href="#features"
             style={{ borderColor: "var(--border-color)" }}
