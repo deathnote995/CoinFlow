@@ -1,0 +1,165 @@
+{
+  "wallets": [
+    {
+      "id": "w1",
+      "name": "PNB Salary Account",
+      "type": "Bank",
+      "balance": 84500,
+      "lowThreshold": 15000
+    },
+    {
+      "id": "w2",
+      "name": "Paytm & GPay UPI",
+      "type": "UPI",
+      "balance": 19250,
+      "lowThreshold": 3000
+    },
+    {
+      "id": "w3",
+      "name": "HDFC Credit Card",
+      "type": "Card",
+      "balance": 28400,
+      "lowThreshold": 5000
+    },
+    {
+      "id": "w4",
+      "name": "Cash Wallet",
+      "type": "Cash",
+      "balance": 16100,
+      "lowThreshold": 2000
+    },
+    {
+      "id": "iqtBDrE6ATk",
+      "name": "ssdsd",
+      "type": "Card",
+      "balance": 33231,
+      "lowThreshold": 2000
+    }
+  ],
+  "transactions": [
+    {
+      "id": "t1",
+      "title": "Monthly Salary",
+      "amount": 92000,
+      "type": "income",
+      "category": "Salary",
+      "wallet": "PNB Salary Account",
+      "member": "Self",
+      "date": "2026-11-01"
+    },
+    {
+      "id": "t2",
+      "title": "Apartment Rent",
+      "amount": 22000,
+      "type": "expense",
+      "category": "Rent & Bills",
+      "wallet": "PNB Salary Account",
+      "member": "Self",
+      "date": "2026-11-03"
+    },
+    {
+      "id": "t3",
+      "title": "Fresh Groceries & Vegetables",
+      "amount": 4850,
+      "type": "expense",
+      "category": "Groceries",
+      "wallet": "Paytm & GPay UPI",
+      "member": "Priya",
+      "date": "2026-11-06"
+    },
+    {
+      "id": "t4",
+      "title": "Dinner & Coffee Outing",
+      "amount": 2640,
+      "type": "expense",
+      "category": "Food & Dining",
+      "wallet": "HDFC Credit Card",
+      "member": "Self",
+      "date": "2026-11-10"
+    },
+    {
+      "id": "t5",
+      "title": "Electricity & Broadband Bill",
+      "amount": 3920,
+      "type": "expense",
+      "category": "Rent & Bills",
+      "wallet": "PNB Salary Account",
+      "member": "Dad",
+      "date": "2026-11-14"
+    },
+    {
+      "id": "t6",
+      "title": "Metro & Cab Commute",
+      "amount": 1840,
+      "type": "expense",
+      "category": "Commute",
+      "wallet": "Paytm & GPay UPI",
+      "member": "Self",
+      "date": "2026-11-18"
+    },
+    {
+      "id": "t7",
+      "title": "Weekend Shopping",
+      "amount": 3500,
+      "type": "expense",
+      "category": "Shopping",
+      "wallet": "HDFC Credit Card",
+      "member": "Priya",
+      "date": "2026-10-24"
+    },
+    {
+      "id": "t8",
+      "title": "October Salary",
+      "amount": 92000,
+      "type": "income",
+      "category": "Salary",
+      "wallet": "PNB Salary Account",
+      "member": "Self",
+      "date": "2026-10-01"
+    },
+    {
+      "id": "t9",
+      "title": "September Groceries",
+      "amount": 6100,
+      "type": "expense",
+      "category": "Groceries",
+      "wallet": "Paytm & GPay UPI",
+      "member": "Dad",
+      "date": "2026-09-15"
+    },
+    {
+      "title": "as",
+      "amount": 233131,
+      "type": "expense",
+      "category": "Food & Dining",
+      "wallet": "Paytm & GPay UPI",
+      "member": "Self",
+      "date": "0221-12-21",
+      "id": "9uxPhb-v3OE"
+    },
+    {
+      "title": "csccd",
+      "amount": 31331,
+      "type": "expense",
+      "category": "Shopping",
+      "wallet": "PNB Salary Account",
+      "member": "Self",
+      "date": "2026-11-23",
+      "id": "TuznRLxmsmo"
+    },
+    {
+      "title": "sdsd",
+      "amount": 2323,
+      "type": "expense",
+      "category": "Rent & Bills",
+      "wallet": "PNB Salary Account",
+      "memberId": "u1",
+      "visibility": "shared",
+      "date": "2026-11-23",
+      "id": "zkXs7IvHL-Q",
+      "time": "16:25",
+      "member": "Rajat Chowdhury"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
