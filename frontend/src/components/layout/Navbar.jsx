@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useThemeStore } from "../../store/useThemeStore.js";
 import { Link } from "react-router-dom";
+import ThemeToggleButton from "../common/ThemeToggleButton.jsx";
 
 const SunIcon = () => (
   <svg
@@ -87,7 +88,7 @@ const NAV_LINKS = [
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const theme = useThemeStore((state) => state.theme);
-  const toggleTheme = useThemeStore((state) => state.toggleTheme);
+//   const toggleTheme = useThemeStore((state) => state.toggleTheme);
 
   useEffect(() => {
     const handleResize = () => {
@@ -137,7 +138,7 @@ const Navbar = () => {
           </ul>
 
           <div className="flex items-center gap-3">
-            <button
+            {/* <button
               type="button"
               onClick={toggleTheme}
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
@@ -150,7 +151,8 @@ const Navbar = () => {
               className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border transition hover:opacity-85"
             >
               {theme === "dark" ? <SunIcon /> : <MoonIcon />}
-            </button>
+            </button> */}
+            <ThemeToggleButton/>
 
             <Link
               to="/login"
@@ -172,7 +174,7 @@ const Navbar = () => {
 
         {/* Mobile Controls: Theme Toggle + Hamburger (< md) */}
         <div className="flex items-center gap-2.5 md:hidden">
-          <button
+          {/* <button
             type="button"
             onClick={toggleTheme}
             aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
@@ -185,7 +187,9 @@ const Navbar = () => {
             className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border transition hover:opacity-85"
           >
             {theme === "dark" ? <SunIcon /> : <MoonIcon />}
-          </button>
+          </button> */}
+
+            <ThemeToggleButton/>
 
           <button
             type="button"

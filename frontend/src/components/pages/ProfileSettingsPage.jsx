@@ -32,6 +32,9 @@ const ProfileSettingsPage = () => {
             <strong style={{ color: "var(--text-muted)" }}>Email:</strong> {currentUser.email}
           </p>
           <p>
+            <strong style={{ color: "var(--text-muted)" }}>Ph.Number:</strong> {currentUser.phNumber}
+          </p>
+          <p>
             <strong style={{ color: "var(--text-muted)" }}>Plan:</strong>{" "}
             <span className="uppercase">{accountPlan}</span>
           </p>

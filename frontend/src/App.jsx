@@ -7,6 +7,8 @@ import TransactionsHistoryPage from "./components/pages/TransactionHistoryPage";
 import FamilyMembersPage from "./components/pages/FamilyMembersPage";
 import ProfileSettingsPage from "./components/pages/ProfileSettingsPage";
 import WalletsPage from "./components/pages/WalletsPage";
+import EmailVerificationPage from "./components/pages/EmailVerificationPage";
+import ForgotPasswordPage from "./components/pages/ForgotPasswordPage";
 
 const App = () => {
   return (
@@ -20,6 +22,8 @@ const App = () => {
         <Route path="/family" element={<FamilyMembersPage />} />
         <Route path="/settings" element={<ProfileSettingsPage />} />
         <Route path="/wallets" element={<WalletsPage />} />
+        <Route path="/verify" element={<EmailVerificationPage/>}/> 
+        <Route path="/forgetPass" element={<ForgotPasswordPage/>} />
       </Routes>
     </BrowserRouter>
   );

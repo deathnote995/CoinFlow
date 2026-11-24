@@ -1,16 +1,19 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AuthSplitLayout from "../auth/AuthSplitLayout";
 
 const RegisterPage = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phnumber,setPhNumber] = useState("")
   const [password, setPassword] = useState("");
   const [planType, setPlanType] = useState("individual");
+  const navigate=useNavigate()
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Register payload:", { name, email, password, planType });
+    console.log("Register payload:", { name, email, phnumber, password, planType });
+    navigate("/verify",{state:{email,planType}})
   };
 
   return (
@@ -53,6 +56,26 @@ const RegisterPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
+              style={{
+                backgroundColor: "var(--bg-app)",
+                borderColor: "var(--border-color)",
+                color: "var(--text-main)",
+              }}
+              className="w-full rounded-lg border px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="reg-phnumber" className="mb-1.5 block text-sm font-medium">
+              Phone Number
+            </label>
+            <input
+              id="reg-phnumber"
+              type="number"
+              required
+              value={phnumber}
+              onChange={(e) => setPhNumber(e.target.value)}
+              placeholder="(+91)00000 00000"
               style={{
                 backgroundColor: "var(--bg-app)",
                 borderColor: "var(--border-color)",

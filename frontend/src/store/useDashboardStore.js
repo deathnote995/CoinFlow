@@ -9,12 +9,12 @@ import {
 const MAX_FAMILY_MEMBERS = 5;
 
 export function computeDateBounds(dateRange) {
-  const ref = new Date("2026-11-23T23:59:59");
+  const ref = new Date();
   const pad = (n) => String(n).padStart(2, "0");
   const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
   if (dateRange.preset === "this-month") {
-    return { start: "2026-11-01", end: fmt(ref) };
+    return { start: `${ref.getFullYear()}-${pad(ref.getMonth() + 1)}-01`, end: fmt(ref) };
   }
   if (dateRange.preset === "last-30") {
     const start = new Date(ref);
@@ -37,18 +37,21 @@ export function computeDateBounds(dateRange) {
 
 export const useDashboardStore = create((set, get) => ({
   maxFamilyMembers: MAX_FAMILY_MEMBERS,
+
+  // Populated dynamically when user logs in / registers / loads profile from API
   currentUser: {
-    id: "u1",
-    name: "Rajat Chowdhury",
-    email: "rajat@coinflow.app",
+    id: null,
+    name: "",
+    email: "",
+    phNumber: "",
   },
-  accountPlan: "family", // "individual" | "family"
-  dashboardView: "family", // "personal" | "family"
-  familyMembers: [
-    { id: "u1", name: "Rajat Chowdhury", email: "rajat@coinflow.app", role: "Owner" },
-    { id: "u2", name: "Priya", email: "priya@coinflow.app", role: "Member" },
-    { id: "u3", name: "Dad", email: "dad@coinflow.app", role: "Member" },
-  ],
+
+  accountPlan: "individual", // "individual" | "family"
+  dashboardView: "personal", // "personal" | "family"
+
+  // Populated dynamically from backend family group
+  familyMembers: [],
+
   wallets: [],
   transactions: [],
   loading: false,
@@ -57,9 +60,18 @@ export const useDashboardStore = create((set, get) => ({
 
   dateRange: {
     preset: "all",
-    startDate: "2026-11-01",
-    endDate: "2026-11-23",
+    startDate: "",
+    endDate: "",
   },
+
+  setCurrentUser: (user) =>
+    set({
+      currentUser: user || { id: null, name: "", email: "" },
+      accountPlan: user?.accountPlan || "individual",
+      dashboardView: user?.accountPlan === "family" ? "family" : "personal",
+    }),
+
+  setFamilyMembers: (members) => set({ familyMembers: Array.isArray(members) ? members : [] }),
 
   setDashboardView: (view) => {
     if (get().accountPlan !== "family" && view === "family") return;
@@ -81,8 +93,8 @@ export const useDashboardStore = create((set, get) => ({
   upgradeToFamilyWithMembers: (newMembersList) => {
     const owner = get().currentUser;
     const cleaned = (newMembersList || [])
-      .map((m) => ({
-        id: `u-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      .map((m, idx) => ({
+        id: m.id || `member-${idx + 1}`,
         name: (m.name || "").trim(),
         email: (m.email || "").trim(),
         role: "Member",
@@ -93,10 +105,17 @@ export const useDashboardStore = create((set, get) => ({
       return { ok: false, message: "Add at least one family member to upgrade to Family Plan." };
     }
 
+    const ownerEntry = {
+      id: owner?.id || "owner",
+      name: owner?.name || "Account Owner",
+      email: owner?.email || "",
+      role: "Owner",
+    };
+
     set({
       accountPlan: "family",
       dashboardView: "family",
-      familyMembers: [{ ...owner, role: "Owner" }, ...cleaned].slice(0, MAX_FAMILY_MEMBERS),
+      familyMembers: [ownerEntry, ...cleaned].slice(0, MAX_FAMILY_MEMBERS),
     });
     return { ok: true };
   },
@@ -114,7 +133,12 @@ export const useDashboardStore = create((set, get) => ({
     set({
       familyMembers: [
         ...familyMembers,
-        { id: `u-${Date.now()}`, name: name.trim(), email: email.trim(), role: "Member" },
+        {
+          id: `member-${familyMembers.length + 1}`,
+          name: name.trim(),
+          email: email.trim(),
+          role: "Member",
+        },
       ],
     });
     return { ok: true };
@@ -122,13 +146,19 @@ export const useDashboardStore = create((set, get) => ({
 
   removeFamilyMember: (memberId) => {
     const { familyMembers, currentUser } = get();
-    if (memberId === currentUser.id && familyMembers.length > 1) {
+    if (currentUser?.id && memberId === currentUser.id && familyMembers.length > 1) {
       return { ok: false, message: "Owner cannot be removed while other members remain." };
     }
     const remaining = familyMembers.filter((m) => m.id !== memberId);
     if (remaining.length <= 1) {
+      const soloList =
+        remaining.length === 1
+          ? remaining
+          : currentUser?.id
+            ? [{ ...currentUser, role: "Owner" }]
+            : [];
       set({
-        familyMembers: remaining.length === 1 ? remaining : [{ ...currentUser, role: "Owner" }],
+        familyMembers: soloList,
         accountPlan: "individual",
         dashboardView: "personal",
       });
@@ -161,12 +191,15 @@ export const useDashboardStore = create((set, get) => ({
         ? familyMembers.find((m) => m.id === entry.memberId) || currentUser
         : currentUser;
 
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    const defaultTime = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
     const payload = {
       ...entry,
-      id: `t-${Date.now()}`,
-      time: entry.time || "16:25",
-      memberId: author.id,
-      member: author.name,
+      time: entry.time || defaultTime,
+      memberId: author?.id || null,
+      member: author?.name || "Self",
       visibility: isFamily ? entry.visibility || "shared" : "private",
     };
 
@@ -183,7 +216,6 @@ export const useDashboardStore = create((set, get) => ({
 
   addWallet: async ({ name, type, balance, lowThreshold }) => {
     const payload = {
-      id: `w-${Date.now()}`,
       name: name.trim(),
       type,
       balance: Number(balance) || 0,

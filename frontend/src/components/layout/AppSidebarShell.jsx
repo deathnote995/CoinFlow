@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import Footer from "./Footer";
 import { useDashboardStore } from "../../store/useDashboardStore.js";
 import { useThemeStore } from "../../store/useThemeStore.js";
+import ThemeToggleButton from "../common/ThemeToggleButton.jsx";
 
 const NAV_ITEMS = [
     { label: "Dashboard", to: "/dashboard", familyOnly: false },
@@ -22,7 +23,7 @@ const AppSidebarShell = ({ pageTitle, pageSubtitle, children }) => {
     const familyMembers = useDashboardStore((s) => s.familyMembers);
 
     const theme = useThemeStore((s) => s.theme);
-    const toggleTheme = useThemeStore((s) => s.toggleTheme);
+    // const toggleTheme = useThemeStore((s) => s.toggleTheme);
 
     const isFamily = accountPlan === "family";
 
@@ -229,7 +230,8 @@ const AppSidebarShell = ({ pageTitle, pageSubtitle, children }) => {
               >
                 {theme === "dark" ? "Light" : "Dark"}
               </button> */}
-                            <button
+              <ThemeToggleButton/>
+                            {/* <button
                                 type="button"
                                 onClick={toggleTheme}
                                 aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
@@ -276,7 +278,7 @@ const AppSidebarShell = ({ pageTitle, pageSubtitle, children }) => {
                                         <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
                                     </svg>
                                 )}
-                            </button>
+                            </button> */}
                         </div>
                     </header>
 

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import Footer from "../layout/Footer";
 import { useThemeStore } from "../../store/useThemeStore.js";
+import ThemeToggleButton from "../common/ThemeToggleButton.jsx";
 
 const SunIcon = () => (
   <svg
@@ -44,7 +45,7 @@ const MoonIcon = () => (
 
 const AuthSplitLayout = ({ children }) => {
   const theme = useThemeStore((state) => state.theme);
-  const toggleTheme = useThemeStore((state) => state.toggleTheme);
+  // const toggleTheme = useThemeStore((state) => state.toggleTheme);
 
   return (
     <div
@@ -72,7 +73,7 @@ const AuthSplitLayout = ({ children }) => {
           </Link>
 
           <div className="flex items-center gap-3">
-            <button
+          {/*  <button
               type="button"
               onClick={toggleTheme}
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
@@ -85,7 +86,9 @@ const AuthSplitLayout = ({ children }) => {
               className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border transition hover:opacity-85"
             >
               {theme === "dark" ? <SunIcon /> : <MoonIcon />}
-            </button>
+            </button> */}
+
+            <ThemeToggleButton/>
 
             <Link
               to="/"

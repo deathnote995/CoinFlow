@@ -7,7 +7,8 @@ import { useDashboardStore } from "../../store/useDashboardStore.js";
 
 const DashboardPage = () => {
   const fetchDashboardData = useDashboardStore((s) => s.fetchDashboardData);
-  const planType = useDashboardStore((s) => s.planType);
+  const planType = useDashboardStore((s) => s.accountPlan);
+  const dashboardView=useDashboardStore((s)=>s.dashboardView)
 
   useEffect(() => {
     fetchDashboardData();
@@ -17,9 +18,11 @@ const DashboardPage = () => {
     <AppSidebarShell
       pageTitle="Analytics Dashboard"
       pageSubtitle={
-        planType === "family"
+        planType === "family" && dashboardView === "family"
           ? "Family account view — cumulative household spend, member bifurcation & latest activity"
-          : "Individual account view — personal wallets, spending trends & latest activity"
+          : planType === "family"
+          ?"Personal view inside Family account — tracking your own transactions"
+          :"Individual account view — personal wallets, spending trends & latest activity"
       }
     >
       <GlobalDateBar />

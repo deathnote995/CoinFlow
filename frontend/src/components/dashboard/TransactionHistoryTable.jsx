@@ -22,14 +22,27 @@ const TransactionHistoryTable = () => {
   const isFamily = accountPlan === "family";
   const showFamilyFeed = isFamily && dashboardView === "family";
 
+  // const recentSix = useMemo(() => {
+  //   const { start, end } = computeDateBounds(dateRange);
+  //   return transactions
+  //     .filter((t) => {
+  //       if (t.date < start || t.date > end) return false;
+  //       const isOwn = t.memberId === currentUser.id || t.member === currentUser.name; 
+  //       if (!showFamilyFeed) return isOwn;
+  //       return t.visibility === "shared" || isOwn;
+  //     })
+  //     .slice(0, 6);
+  // }, [transactions, dateRange, showFamilyFeed, currentUser]);
+
   const recentSix = useMemo(() => {
     const { start, end } = computeDateBounds(dateRange);
     return transactions
       .filter((t) => {
         if (t.date < start || t.date > end) return false;
-        const isOwn = t.memberId === currentUser.id || t.member === currentUser.name;
+        const isOwn = t.memberId === currentUser.id || t.member === currentUser.name || (!t.memberId && t.member === "Self");
+        const effectiveVisibility=t.visibility||"shared";
         if (!showFamilyFeed) return isOwn;
-        return t.visibility === "shared" || isOwn;
+        return effectiveVisibility === "shared" || isOwn;
       })
       .slice(0, 6);
   }, [transactions, dateRange, showFamilyFeed, currentUser]);

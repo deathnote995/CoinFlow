@@ -113,13 +113,17 @@ const AnalyticsChartsGrid = () => {
     const catMap = {};
     const memMap = {};
     const monthMap = {};
+    const personalWalletMap = {};
 
     for (const tx of visibleTx) {
       const amt = Number(tx.amount) || 0;
       const mKey = (tx.date || "2026-11-01").slice(0, 7);
       if (tx.type === "income") {
         income += amt;
-      } else {
+      }
+      else if (tx.type === "expense") {
+        const wName = tx.wallet || "Other Wallet"
+        personalWalletMap[wName] = (personalWalletMap[wName] || 0) + amt;
         expense += amt;
         catMap[tx.category] = (catMap[tx.category] || 0) + amt;
         memMap[tx.member || currentUser.name] = (memMap[tx.member || currentUser.name] || 0) + amt;
@@ -149,6 +153,11 @@ const AnalyticsChartsGrid = () => {
       monthSeries: Object.entries(monthMap)
         .sort((a, b) => a[0].localeCompare(b[0]))
         .map(([label, value], i) => ({ id: `mo-${i}`, label, value })),
+      personalWalletSpendSeries: Object.entries(personalWalletMap).map(([label, value], i) => ({
+        id: `pw-${i}`,
+        label,
+        value,
+      })),
     };
   }, [visibleTx, wallets, currentUser.name]);
 
@@ -349,18 +358,30 @@ const AnalyticsChartsGrid = () => {
             )}
           />
         ) : (
+          // <MaximizableChartCard
+          //   chartId="solo-mode-card"
+          //   title="Individual Account Mode"
+          //   subtitle="Personal transactions only"
+          //   seriesItems={metrics.categorySeries}
+          //   renderChart={() => (
+          //     <div className="space-y-2 py-2 text-xs">
+          //       <p style={{ color: "var(--text-muted)" }} className="leading-relaxed">
+          //         You are viewing your personal account. Upgrade to a Family Plan in Profile &amp;
+          //         Plan to add members and compare per-member spend.
+          //       </p>
+          //     </div>
+          //   )}
+          // />
           <MaximizableChartCard
-            chartId="solo-mode-card"
-            title="Individual Account Mode"
-            subtitle="Personal transactions only"
-            seriesItems={metrics.categorySeries}
-            renderChart={() => (
-              <div className="space-y-2 py-2 text-xs">
-                <p style={{ color: "var(--text-muted)" }} className="leading-relaxed">
-                  You are viewing your personal account. Upgrade to a Family Plan in Profile &amp;
-                  Plan to add members and compare per-member spend.
-                </p>
-              </div>
+            chartId="personal-wallet-pie"
+            title="Personal Spend by Wallet"
+            subtitle="How your personal expenses split across wallets"
+            seriesItems={metrics.personalWalletSpendSeries}
+            renderChart={(selectedIds, expanded) => (
+              <DonutChartSvg
+                items={metrics.personalWalletSpendSeries.filter((w) => selectedIds.includes(w.id))}
+                size={expanded ? 210 : 142}
+              />
             )}
           />
         )}

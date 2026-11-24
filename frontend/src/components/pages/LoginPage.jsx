@@ -63,6 +63,17 @@ const LoginPage = () => {
           <button type="submit" className="cf-btn-primary w-full py-2.5 text-sm">
             Login
           </button>
+          
+              <p className="text-center">
+                <Link
+                to="/forgetPass"
+                style={{ color: "var(--text-muted)" }}
+                className="hover:underline"
+                >
+                Forget Password
+                </Link>
+              </p>
+
         </form>
 
         <p style={{ color: "var(--text-muted)" }} className="mt-6 text-center text-sm">
