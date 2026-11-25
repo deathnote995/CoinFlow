@@ -3,6 +3,7 @@ import User from '../models/User.model.js';
 import { sendEmailAlert } from '../utils/email.service.js';
 import logger from '../utils/logger.js';
 import generateToken from '../utils/generateToken.js';
+import { validatePassword } from '../utils/password.util.js';
 
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -10,10 +11,14 @@ const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString()
 export const registerUser = async (req, res) => {
     try {
         const { name, email, phone, password, balanceAlertThreshold } = req.body;
+        const passwordErr=validatePassword(password)
 
         if (!name || !email || !password) {
             return res.status(400).json({ success: false, message: 'Please provide name, email, and password.' });
         }
+
+        if(passwordErr)
+            return res.status(400).json({success:false,message:passwordErr})
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {

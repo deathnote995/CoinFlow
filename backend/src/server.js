@@ -1,10 +1,12 @@
 import './config/env.js'
 // import dotenv from 'dotenv'
 // dotenv.config()
-
+import cors from 'cors'
 import express, { json } from 'express'
+import morgan from 'morgan'
 import logger from './utils/logger.js'
 import connectDB from './config/db.js'
+
 import transactionRoutes from './routes/transaction.route.js'
 import userRoutes from './routes/user.route.js'
 import walletRoutes from './routes/wallet.route.js'
@@ -14,8 +16,17 @@ import analyticRoute from './routes/analytics.route.js'
 
 const app=express()
 const PORT=process.env.PORT||3000
+
+app.use(cors({
+    origin:process.env.FRONTEND_URL||'http://localhost:5173'
+}))
 app.use(express.json())
-connectDB()
+app.use(morgan(':method :url :status :response-time ms',{
+    stream:{
+        write:(message)=>logger.info(message.trim())
+    }
+}))
+// connectDB()
 
 app.use('/api/transactions',transactionRoutes)
 app.use('/api/users',userRoutes)
@@ -34,7 +45,21 @@ app.get('/api/health',(req,res)=>{
 })
 
 
-app.listen(PORT,()=>{
-    console.log(`Server is listening on ${PORT}`)
-})
+// app.listen(PORT,()=>{
+//     console.log(`Server is listening on ${PORT}`)
+// })
 
+const startServer=async()=>{
+    try {
+        await connectDB()
+        app.listen(PORT,()=>{
+            logger.info(`Server is listening on ${PORT}`)
+        })
+
+    } catch (error) {
+        logger.error(`Server startup failure: ${error.message}`)
+        process.exit(1)
+    }
+}
+
+startServer()

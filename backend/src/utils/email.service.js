@@ -41,7 +41,8 @@ export const sendEmailAlert=async(toEmail,subject,htmlContent)=>{
         logger.info(`Email sent successfully to ${toEmail}: ${info.messageId}`)
         return {success:true}
     } catch (error) {
-        logger.error(`Failed to send Email to ${toEmail}: ${error.message}`)
-        return {success:false,error:error.message}
+        // logger.error(`Failed to send Email to ${toEmail}: ${error.message}`)
+        // return {success:false,error:error.message}
+        throw error
     }
 }

@@ -1,19 +1,80 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthSplitLayout from "../auth/AuthSplitLayout";
+import { registerUser } from "../../services/authApi";
 
 const RegisterPage = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phnumber,setPhNumber] = useState("")
+  const [phnumber, setPhNumber] = useState("")
   const [password, setPassword] = useState("");
-  const [planType, setPlanType] = useState("individual");
-  const navigate=useNavigate()
+  // const [planType, setPlanType] = useState("individual");
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const passwordRules = [
+    {
+      label: "At least 8 characters",
+      valid: password.length >= 8
+    },
+    {
+      label: "At least one uppercase letter",
+      valid: /[A-Z]/.test(password)
+    },
+    {
+      label: "At least one lowercase letter",
+      valid: /[a-z]/.test(password)
+    },
+    {
+      label: "At least one number",
+      valid: /[0-9]/.test(password)
+    },
+    {
+      label: "At least one special character",
+      valid: /[^A-Za-z0-9\s]/.test(password)
+    },
+    {
+      label: "Maximum 72 bytes",
+      valid: new TextEncoder().encode(password).length <= 72
+    }
+  ];
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Register payload:", { name, email, phnumber, password, planType });
-    navigate("/verify",{state:{email,planType}})
+  const isPasswordValid = passwordRules.every(
+    rule => rule.valid
+  )
+  const navigate = useNavigate()
+
+  const handleSubmit = async (e) => {
+    // e.preventDefault();
+    // console.log("Register payload:", { name, email, phnumber, password, planType });
+    // navigate("/verify",{state:{email,planType}})
+
+    e.preventDefault()
+
+    if (loading) return
+
+    setError("")
+
+    if (!isPasswordValid) {
+      setError("Please satisfy all password requirements")
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const response = await registerUser({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phnumber,
+        password,
+      })
+      navigate("/verify", { state: { email: email.trim().toLowerCase(), userId: response.userId } })
+    } catch (error) {
+      setError(error.message)
+    } finally {
+      setLoading(false)
+    }
+
   };
 
   return (
@@ -35,7 +96,7 @@ const RegisterPage = () => {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Rajat Chowdhury"
+              placeholder="John Doe"
               style={{
                 backgroundColor: "var(--bg-app)",
                 borderColor: "var(--border-color)",
@@ -71,11 +132,14 @@ const RegisterPage = () => {
             </label>
             <input
               id="reg-phnumber"
-              type="number"
+              type="tel"
               required
               value={phnumber}
               onChange={(e) => setPhNumber(e.target.value)}
               placeholder="(+91)00000 00000"
+              maxLength={10}
+              inputMode="numeric"
+              pattern="[6-9][0-9]{9}"
               style={{
                 backgroundColor: "var(--bg-app)",
                 borderColor: "var(--border-color)",
@@ -103,9 +167,35 @@ const RegisterPage = () => {
               }}
               className="w-full rounded-lg border px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-orange-500"
             />
+
+            {/* Password requirements */}
+
+            {password.length > 0 && (
+              <div className="mt-3 space-y-1.5">
+
+                <p className="text-xs font-semibold">
+                  Password requirements:
+                </p>
+
+                {passwordRules.map((rule) => (
+                  <div
+                    key={rule.label}
+                    className={`flex items-center gap-2 text-xs ${rule.valid
+                        ? "text-green-500"
+                        : "text-gray-500"
+                      }`}
+                  >
+                    <span>{rule.valid ? "✓" : "○"}</span>
+                    <span>{rule.label}</span>
+                  </div>
+                ))}
+
+              </div>
+            )}
+
           </div>
 
-          <div>
+          {/* <div>
             <span className="mb-1.5 block text-sm font-medium">Account type</span>
             <div className="grid grid-cols-2 gap-2.5">
               {["individual", "family"].map((type) => {
@@ -127,10 +217,16 @@ const RegisterPage = () => {
                 );
               })}
             </div>
-          </div>
+          </div> */}
 
-          <button type="submit" className="cf-btn-primary w-full py-2.5 text-sm">
-            Create Account
+          {error && (
+            <p role="alert" className="text-sm text-red-500">
+              {error}
+            </p>
+          )}
+
+          <button disabled={loading||!isPasswordValid} type="submit" className="cf-btn-primary w-full py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-60">
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AuthSplitLayout from "../auth/AuthSplitLayout";
+import { verifyEmail } from "../../services/authApi";
 
 const RESEND_TIMEOUT_SECONDS = 30;
 
@@ -8,7 +9,8 @@ const EmailVerificationPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email || "your registered email";
-
+  const userId=location.state?.userId
+  const [loading,setLoading]=useState(false)
   const [otp, setOtp] = useState("");
   const [secondsLeft, setSecondsLeft] = useState(RESEND_TIMEOUT_SECONDS);
   const [statusMsg, setStatusMsg] = useState("");
@@ -21,11 +23,43 @@ const EmailVerificationPage = () => {
     return () => clearInterval(timer);
   }, [secondsLeft]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
+    // e.preventDefault();
+    // if (!otp.trim()) return;
+    // // Later: call verifyOtpApi({ email, otp })
+    // navigate("/login", { state: { verified: true } });
+
     e.preventDefault();
-    if (!otp.trim()) return;
-    // Later: call verifyOtpApi({ email, otp })
-    navigate("/login", { state: { verified: true } });
+
+  setStatusMsg("");
+
+  if (!userId) {
+    setStatusMsg("Registration details are missing.");
+    return;
+  }
+
+  if (!/^\d{6}$/.test(otp)) {
+    setStatusMsg("Please enter a valid 6-digit OTP.");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    await verifyEmail({
+      userId,
+      otp,
+    });
+
+    navigate("/login", {
+      replace: true,
+      state: { verified: true },
+    });
+  } catch (err) {
+    setStatusMsg(err.message);
+  } finally {
+    setLoading(false);
+  }
   };
 
   const handleResendOtp = () => {
@@ -74,8 +108,8 @@ const EmailVerificationPage = () => {
             </p>
           )}
 
-          <button type="submit" className="cf-btn-primary w-full cursor-pointer py-2.5 text-sm">
-            Verify
+          <button disabled={loading} type="submit" className="cf-btn-primary w-full cursor-pointer py-2.5 text-sm disabled:opacity-60">
+            {loading?"Verifying...":"Verify"}
           </button>
         </form>
 

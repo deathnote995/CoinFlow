@@ -18,7 +18,8 @@ const userSchema=new mongoose.Schema({
         type:String,
         required:[true,'Please add a secure password'],
         minlength:[8,'Password must be atleast 8 characters long'],
-        unique:true,
+        select:false
+        // unique:true,
     },
     phone:{ //Optional
         type:String,

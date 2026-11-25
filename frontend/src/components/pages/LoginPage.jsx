@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import AuthSplitLayout from "../auth/AuthSplitLayout";
+import { loginUser } from "../../services/authApi";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login payload:", { email, password });
+    // console.log("Login payload:", { email, password });
+    const response=await loginUser({email:email.trim().toLowerCase(),password})
   };
 
   return (
