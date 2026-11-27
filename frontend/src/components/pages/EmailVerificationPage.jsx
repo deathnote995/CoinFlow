@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import AuthSplitLayout from "../auth/AuthSplitLayout";
 import { verifyEmail } from "../../services/authApi";
 
@@ -70,6 +70,12 @@ const EmailVerificationPage = () => {
   };
 
   const formattedTime = `00:${String(secondsLeft).padStart(2, "0")}`;
+
+  if(!userId||!email){
+    return (
+      <Navigate to="/register" replace/>
+    )
+  }
 
   return (
     <AuthSplitLayout>

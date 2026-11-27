@@ -1,16 +1,30 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AuthSplitLayout from "../auth/AuthSplitLayout";
 import { loginUser } from "../../services/authApi";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading,setLoading]=useState(false)
+  const [error,setError]=useState("")
+  const navigate=useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     // console.log("Login payload:", { email, password });
-    const response=await loginUser({email:email.trim().toLowerCase(),password})
+    if(loading) return
+    setError("")
+    setLoading(true)
+    try {
+      const response=await loginUser({email:email.trim().toLowerCase(),password})      
+      navigate("/dashboard",{state:{email:email.trim().toLowerCase(),userId:response.userId}})
+    } catch (error) {
+      setError(error.message)
+    } finally {
+      setLoading(false)
+    }
+
   };
 
   return (
@@ -62,7 +76,13 @@ const LoginPage = () => {
             />
           </div>
 
-          <button type="submit" className="cf-btn-primary w-full py-2.5 text-sm">
+          {error && (
+            <p role="alert" className="text-sm text-red-500">
+              {error}
+            </p>
+          )}
+
+          <button disabled={loading || !email || !password} type="submit" className="cf-btn-primary w-full py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-60">
             Login
           </button>
           

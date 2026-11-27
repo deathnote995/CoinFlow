@@ -40,3 +40,7 @@ export function forgotPassword(payload) {
 export function resetPassword(payload) {
   return request("/auth/reset-password", "POST", payload);
 }
+
+export function updateTheme(payload) {
+    return request("/api/users/theme","POST",payload)
+}

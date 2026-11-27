@@ -225,7 +225,7 @@ const RegisterPage = () => {
             </p>
           )}
 
-          <button disabled={loading||!isPasswordValid} type="submit" className="cf-btn-primary w-full py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-60">
+          <button disabled={loading||!isPasswordValid||!email||!name} type="submit" className="cf-btn-primary w-full py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-60">
             {loading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
